@@ -19,7 +19,7 @@ random_play ()
 
 }
 
-dependecy_check;
+dependency_check;
 
 declare -a Music=(Lofi Piano Jazz Rain Cafe Nature Random Stop)
 
