@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 
-[[ -z $(which dmenu) || -z $(which notify-send) || -z $(which mpv) ]] >/dev/null 2>&1 && echo "Make sure dmenu, libnotify and mpv are installed" && exit;
-
-declare -a Music=("Lofi","Piano","Jazz","Rain","Cafe","Nature","Random","Stop")
+dependency_check ()
+{
+	[[ -z $(which dmenu) || -z $(which notify-send) || -z $(which mpv) ]] >/dev/null 2>&1 &&
+		echo "Make sure dmenu, libnotify and mpv are installed" && exit;
+}
 
 pause ()
 {
@@ -17,6 +19,10 @@ random_play ()
 
 }
 
+dependecy_check;
+
+declare -a Music=(Lofi Piano Jazz Rain Cafe Nature Random Stop)
+
 declare -a URLS=(
 		"http://0x0.st/NUzK"  # Lofi
 		"http://0x0.st/NUzP"  # Piano
@@ -26,7 +32,7 @@ declare -a URLS=(
 		"http://0x0.st/NUz0"  # Nature
 		)
 
-selection=$(echo ${Music[@]} | sed 's/,/\n/g' | dmenu -i -p "What to play? ") && pause
+selection=$(printf "%s\n" ${Music[@]} | dmenu -i -p "What to play? ") && pause
 
 case $selection in
 	Lofi) mpv --no-video ${URLS[0]} >/dev/null 2>&1 ;;
