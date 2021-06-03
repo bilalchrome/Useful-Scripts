@@ -2,46 +2,44 @@
 
 dependency_check ()
 {
-	[[ -z $(which dmenu) || -z $(which notify-send) || -z $(which mpv) ]] >/dev/null 2>&1 &&
-		echo "Make sure dmenu, libnotify and mpv are installed" && exit;
+	[[ -z $(which dmenu) || -z $(which notify-send) || -z $(which mpv) || -z $(which xclip) ]] &>/dev/null &&
+	echo -e "Make sure you have the following dependencies:\n+ dmenu\n+ libnotify\n+ mpv\n+ xclip" && exit
 }
 
 pause ()
 {
-	pkill -u $USER -i mpv >/dev/null 2>&1
+	pkill -u $USER -i mpv &>/dev/null
 }
 
 random_play ()
 {
-	pkill -u $USER -i mpv
-	rand=$(( $RANDOM % 5 ))
-	mpv --no-video ${URLS[$rand]} >/dev/null 2>&1
-
+	local -a channel=("${urls[@]}")
+	pause
+	mpv --no-video ${channel[RANDOM % ${#channel[@]}}
 }
 
 dependency_check;
 
-declare -a Music=(Lofi Piano Jazz Rain Cafe Nature Random Stop)
+declare -A urls=([Lofi]="https://www.youtube.com/watch?v=5qap5aO4i9A"
+		[Piano]="https://www.youtube.com/watch?v=XULUBg_ZcAU"
+		[Jazz]="https://www.youtube.com/watch?v=B2fKHoG_aLU"
+		[Rain]="https://www.youtube.com/watch?v=mPZkdNFkNps"
+		[Cafe]="https://www.youtube.com/watch?v=VMAPTo7RVCo"
+		[Nature]="https://www.youtube.com/watch?v=eKFTSSKCzWA")
 
-declare -a URLS=(
-		"http://0x0.st/NUzK"  # Lofi
-		"http://0x0.st/NUzP"  # Piano
-		"http://0x0.st/NUzZ"  # Jazz
-		"http://0x0.st/NUzN"  # Rain
-		"http://0x0.st/NUzq"  # Cafe
-		"http://0x0.st/NUz0"  # Nature
-		)
+printf -v all_selection '%s\n' ${!urls[@]} Clipboard Local Random Stop
+selection=$(dmenu -i -p "What to play?" <<< "$all_selection") && pause
 
-selection=$(printf "%s\n" ${Music[@]} | dmenu -i -p "What to play? ") && pause
-
-case $selection in
-	Lofi) mpv --no-video ${URLS[0]} >/dev/null 2>&1 ;;
-	Piano) mpv --no-video ${URLS[1]} >/dev/null 2>&1 ;;
-	Jazz) mpv --no-video ${URLS[2]} >/dev/null 2>&1 ;;
-	Rain) mpv --no-video ${URLS[3]} >/dev/null 2>&1 ;;
-	Cafe) mpv --no-video ${URLS[4]} >/dev/null 2>&1 ;;
-	Nature) mpv --no-video ${URLS[5]} >/dev/null 2>&1 ;;
-	Random) random_play ;;
-	Stop) pause && exit ;;
-	*) notify-send "Nothing played" && exit ;;
-esac
+if [ "${urls[$selection]}" ]; then
+	mpv --no-video "${urls[$selection]}" &>/dev/null
+else
+	case $selection in
+		Clipboard) mpv --no-video "$(xclip -o)" &>/dev/null ;;
+		Random) random_play ;;
+		Stop) pause && exit ;;
+		Local) printf -v local_song '%s\n' "$(ls $HOME/Music/)" &&
+		       chosen_song="$(dmenu -i -p "Local song" -l 20 <<< "$local_song")" &&
+		       mpv --no-video "$HOME/Music/$chosen_song" ;;
+		*) notify-send "Nothing played" && exit ;;
+	esac
+fi
