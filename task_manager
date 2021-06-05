@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+
+tasks_db="$HOME/Work/tasks.md"
+
+mark_done ()
+{
+	# Deleting task from file
+	sed -i "/^- \[[ o]\] $chosen_task/d" $tasks_db
+	# Marking it as done
+	echo -e "- [X] $chosen_task ~~$(date)~~" | sed "s/ \[STARTED\]//g" >> $tasks_db
+}
+
+mark_started ()
+{
+	# Deleting task from file
+	sed -i "/^- \[[ ]\] $chosen_task/d" $tasks_db
+	# Marking it as done
+	echo -e "- [o] $chosen_task STARTED" >> $tasks_db
+}
+
+create_task ()
+{
+	new_task=$(echo "" | dmenu -p "New task: ")
+	[[ ! -z "$new_task" ]] && echo -e "- [ ] $new_task" >> $tasks_db || exit
+}
+
+recent_tasks=$(tac $tasks_db | sed -n '1,/^$/p' | sed '/^*$/d' | awk '/- \[ \]/;/- \[o\]/' | sed 's/- \[ \]//g' | sed 's/- \[o\]//g' | sed 's/^[ \t]*//g' | sed 's/[ \t]*$//g' | sed 's/STARTED/\[STARTED\]/g')
+
+declare -a choices=("Create Task" "Mark Done" "Mark Started" "New Entry")
+
+printf -v singular_choice '%s\n' "${choices[@]}"
+
+selected_choice=$(dmenu -i -p "Choose an option: " <<< "$singular_choice")
+
+case $selected_choice in
+	("Create Task") create_task ;;
+	("Mark Done") chosen_task=$(echo "${recent_tasks[@]}" | sed 's/,/\n/g'|  dmenu -i -p "Mark done? " -l 20)
+		[[ -z "$chosen_task" ]] && exit || mark_done ;;
+	("Mark Started") chosen_task=$(echo "${recent_tasks[@]}" | sed 's/,/\n/g'|  dmenu -i -p "Mark statred? " -l 20)
+		[[ -z "$chosen_task" ]] && exit || mark_started ;;
+	("New Entry") echo -e "\n # $(date)\n" >> $tasks_db && create_task ;;
+	(*) break ;;
+esac

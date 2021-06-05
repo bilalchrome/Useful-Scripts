@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+
+echo "Creating LaTeX tempelate..."
+
+mkdir LaTeX_ENV && touch LaTeX_ENV/citations.bib && cd LaTeX_ENV
+
+#Adding title, author and date
+printf "\\\title{$1}\n\\\author{$2}\n\\\date{\\\today}\n\n\n\\\documentclass{article}\n\n" >> main.tex;
+
+# Adding needed packages
+printf "\\\usepackage{graphicx}\n" >> main.tex
+printf "\\\usepackage{amsmath}\n" >> main.tex
+printf "\\\usepackage[backend=biber,style=nature]{biblatex}\n" >> main.tex
+printf "\\\addbibresource{citations.bib}\n" >> main.tex
+printf "\\\usepackage{placeins}\n" >> main.tex
+printf "\\\usepackage[utf8]{inputenc}\n" >> main.tex
+
+printf "\\\begin{document}\n\\\maketitle\n\n" >> main.tex
+
+declare -i title_length=$(echo "$1" | wc -w)
+declare -i author_length=$(echo "$2" | wc -w)
+
+case $3 in
+	Abstract | abstract)
+		printf "\\\begin{abstract}\n\n\\\end{abstract}\n\n" >> main.tex
+		words_to_delete=$(( $title_length + $author_length + 2 ));
+		words_left=$( echo "$@" | cut -d" " -f $(echo $words_to_delete)-);
+		;;
+	*)
+		words_to_delete=$(( $title_length + $author_length + 1 ));
+		words_left=$( echo "$@" | cut -d" " -f $(echo $words_to_delete)-);
+esac
+
+declare -a words_leftt=$(echo $words_left | sed 's/ /\n/g')
+
+for input in ${words_leftt[@]}; do
+ 	[[ ! -z "$input" ]] && printf "\\\section{$input}\n\n" >> main.tex;
+done
+
+
+printf "\n\n\\\newpage\n\\\printbibliography\n\n\\\end{document}" >> main.tex;
+
+diree=$(pwd)
+
+compiler main.tex;
+
+nvim +18 -c "startinsert" main.tex

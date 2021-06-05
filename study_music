@@ -15,7 +15,7 @@ random_play ()
 {
 	local -a channel=("${urls[@]}")
 	pause
-	mpv --no-video ${channel[RANDOM % ${#channel[@]}}
+	mpv --no-video "${channel[RANDOM % ${#channel[@]}]}" &>/dev/null
 }
 
 dependency_check;
@@ -39,7 +39,7 @@ else
 		Stop) pause && exit ;;
 		Local) printf -v local_song '%s\n' "$(ls $HOME/Music/)" &&
 		       chosen_song="$(dmenu -i -p "Local song" -l 20 <<< "$local_song")" &&
-		       mpv --no-video "$HOME/Music/$chosen_song" ;;
+		       mpv --no-video "$HOME/Music/$chosen_song" &>/dev/null ;;
 		*) notify-send "Nothing played" && exit ;;
 	esac
 fi
