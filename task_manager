@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
 tasks_db="$HOME/Work/tasks.md"
-
 mark_done ()
 {
 	# Deleting task from file
@@ -9,7 +8,6 @@ mark_done ()
 	# Marking it as done
 	echo -e "- [X] $chosen_task ~~$(date)~~" | sed "s/ \[STARTED\]//g" >> $tasks_db
 }
-
 mark_started ()
 {
 	# Deleting task from file
@@ -17,16 +15,30 @@ mark_started ()
 	# Marking it as done
 	echo -e "- [o] $chosen_task STARTED" >> $tasks_db
 }
-
 create_task ()
 {
 	new_task=$(echo "" | dmenu -p "New task: ")
 	[[ ! -z "$new_task" ]] && echo -e "- [ ] $new_task" >> $tasks_db || exit
 }
+edit_task ()
+{
 
+	if [[ "$chosen_task" == *STARTED* ]]; then
+		 older_task=$(sed "s/ \[STARTED\]//g;s/[ \t]*$//g" <<< "$chosen_task")
+		 echo "$older_task" > /tmp/task_buffer && st -e nvim /tmp/task_buffer
+		 edited_task=$(cat /tmp/task_buffer)
+		 sed -i "/$older_task/d" $tasks_db && echo -e "- [o] $edited_task STARTED" >> $tasks_db
+	else
+		older_task="$chosen_task"
+		echo -e "$older_task" > /tmp/task_buffer && st -e nvim /tmp/task_buffer
+		edited_task=$(cat /tmp/task_buffer)
+		sed -i "/$older_task/d" $tasks_db && echo -e "- [ ] $edited_task" >> $tasks_db
+	fi
+
+}
 recent_tasks=$(tac $tasks_db | sed -n '1,/^$/p' | sed '/^*$/d' | awk '/- \[ \]/;/- \[o\]/' | sed 's/- \[ \]//g' | sed 's/- \[o\]//g' | sed 's/^[ \t]*//g' | sed 's/[ \t]*$//g' | sed 's/STARTED/\[STARTED\]/g')
 
-declare -a choices=("Create Task" "Mark Done" "Mark Started" "New Entry")
+declare -a choices=("Create Task" "Mark Done" "Mark Started" "Edit Task" "New Entry")
 
 printf -v singular_choice '%s\n' "${choices[@]}"
 
@@ -38,6 +50,8 @@ case $selected_choice in
 		[[ -z "$chosen_task" ]] && exit || mark_done ;;
 	("Mark Started") chosen_task=$(echo "${recent_tasks[@]}" | sed 's/,/\n/g'|  dmenu -i -p "Mark statred? " -l 20)
 		[[ -z "$chosen_task" ]] && exit || mark_started ;;
+	("Edit Task") chosen_task=$(echo "${recent_tasks[@]}" | sed 's/,/\n/g'|  dmenu -i -p "Edit task? " -l 20)
+		edit_task ;;
 	("New Entry") echo -e "\n # $(date)\n" >> $tasks_db && create_task ;;
 	(*) break ;;
 esac
