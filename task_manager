@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 
 tasks_db="$HOME/Work/tasks.md"
+
+[[ -f "$tasks_db" ]] || touch $tasks_db
+
+rm -rf /tmp/task_buffer &>/dev/null
+
 mark_done ()
 {
 	# Deleting task from file
@@ -27,12 +32,20 @@ edit_task ()
 		 older_task=$(sed "s/ \[STARTED\]//g;s/[ \t]*$//g" <<< "$chosen_task")
 		 echo "$older_task" > /tmp/task_buffer && st -e nvim /tmp/task_buffer
 		 edited_task=$(cat /tmp/task_buffer)
-		 sed -i "/$older_task/d" $tasks_db && echo -e "- [o] $edited_task STARTED" >> $tasks_db
+		 if [[ "$older_task" == "$edited_task" ]]; then
+			 exit
+		 else
+		 	sed -i "/$older_task/d" $tasks_db && echo -e "- [o] $edited_task STARTED" >> $tasks_db
+		 fi
 	else
 		older_task="$chosen_task"
 		echo -e "$older_task" > /tmp/task_buffer && st -e nvim /tmp/task_buffer
 		edited_task=$(cat /tmp/task_buffer)
-		sed -i "/$older_task/d" $tasks_db && echo -e "- [ ] $edited_task" >> $tasks_db
+		if [[ "$older_task" == "$edited_task" ]]; then
+		        exit
+		else
+			sed -i "/$older_task/d" $tasks_db && echo -e "- [ ] $edited_task" >> $tasks_db
+		fi
 	fi
 
 }
@@ -51,7 +64,7 @@ case $selected_choice in
 	("Mark Started") chosen_task=$(echo "${recent_tasks[@]}" | sed 's/,/\n/g'|  dmenu -i -p "Mark statred? " -l 20)
 		[[ -z "$chosen_task" ]] && exit || mark_started ;;
 	("Edit Task") chosen_task=$(echo "${recent_tasks[@]}" | sed 's/,/\n/g'|  dmenu -i -p "Edit task? " -l 20)
-		edit_task ;;
+	[[ -z "$chosen_task" ]] && exit || edit_task ;;
 	("New Entry") echo -e "\n # $(date)\n" >> $tasks_db && create_task ;;
 	(*) break ;;
 esac
