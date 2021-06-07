@@ -21,7 +21,7 @@ mark_started ()
 	# Deleting task from file
 	linenum=$(fgrep -n "$chosen_task" $tasks_db | cut -d: -f1)
 	sed -i "$linenum d" $tasks_db
-	# Marking it as done
+	# Marking it as started
 	echo -e "- [o] $chosen_task STARTED" >> $tasks_db
 }
 
