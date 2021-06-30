@@ -12,7 +12,7 @@ if [[ $count -eq 1 ]]; then
 	declare -a choice=("yes"
 			   "no")
 	decision=$(echo ${choice[@]} | sed 's/ /\n/g' | dmenu -i -p "Keep paper?")
-	if [ "$decision" == "Yes" ];then
+	if [ "$decision" == "yes" ]; then
 		mv *.pdf $HOME/Work/Papers/PIV
 		notify-send "Paper saved to \"Papers\" directory"
 		else
