@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 
 tasks_db="$HOME/Work/tasks.md"
+tasks_log="$HOME/Work/tasks.log"
 
 [[ -f "$tasks_db" ]] || touch $tasks_db
+[[ -f "$tasks_log" ]] || touch $tasks_log
 
 rm -rf /tmp/task_buffer &>/dev/null
 
@@ -14,6 +16,7 @@ mark_done ()
 	sed -i "$linenum d" $tasks_db
 	# Marking it as done
 	echo -e "- [X] $chosen_task ~~$(date)~~" | sed "s/ STARTED//g" >> $tasks_db
+	echo -e "[$(date)]\tDONE\t\t[$chosen_task]" >> $tasks_log
 }
 
 mark_started ()
@@ -23,12 +26,14 @@ mark_started ()
 	sed -i "$linenum d" $tasks_db
 	# Marking it as started
 	echo -e "- [o] $chosen_task STARTED" >> $tasks_db
+	echo -e "[$(date)]\tSTARTED\t\t[$chosen_task]" >> $tasks_log
 }
 
 create_task ()
 {
 	new_task=$(echo "" | dmenu -p "New task: ")
 	[[ ! -z "$new_task" ]] && echo -e "- [ ] $new_task" >> $tasks_db || exit
+	echo -e "[$(date)]\tCREATED\t\t[$new_task]" >> $tasks_log
 }
 
 edit_task ()
@@ -53,12 +58,6 @@ edit_task ()
 		fi
 	fi
 }
-
-# arrange_everything ()
-# {
-# 	xs=$(
-#
-# }
 
 recent_tasks=$(tac $tasks_db | sed -n '1,/^$/p' | sed '/^*$/d' | awk '/- \[ \]/;/- \[o\]/' | sed 's/- \[ \]//g' | sed 's/- \[o\]//g' | sed 's/^[ \t]*//g' | sed 's/[ \t]*$//g' | sed 's/STARTED/\[STARTED\]/g')
 
