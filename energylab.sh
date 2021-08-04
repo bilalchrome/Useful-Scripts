@@ -1,8 +1,5 @@
 #!/usr/bin/env bash
 
-# labsum is the sum of lab report grades
-# fin is final grade.
-
 awk ' BEGIN {
 
 FS=",|\t";
@@ -41,5 +38,3 @@ else { lg="F" }
 sum+=fin; print $1, $2, $3, $4, $9, $10, $11, $12, $14, $15, $16, $13, fin, lg } END {
 
 print "\n\nCLASS AVERAGE", sum/NR } ' $1
-
-# > Energy_Lab_Final_Grade.csv
