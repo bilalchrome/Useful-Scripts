@@ -44,4 +44,6 @@ diree=$(pwd)
 
 compiler main.tex;
 
-nvim +18 -c "startinsert" main.tex
+zathura main.pdf &>/dev/null;
+
+st -e nvim +18 -c "startinsert" main.tex

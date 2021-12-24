@@ -1,0 +1,66 @@
+#!/bin/bash
+
+login=$(ivpn status 2>/dev/null | grep -o "Not logged in")
+
+if [[ $login == "Not logged in" ]]; then
+	notify-send "You're not logged in!";
+	ivpn_id=$(echo "" | dmenu -p "Input IVPN ID to login");
+	[[ -z $ivpn_id ]] && exit;
+	ivpn login -force "$ivpn_id" && notify-send "Logged in 😏" && notify-send "Now try re-running the script" || notify-send "Login failed 🤯" && exit
+fi
+
+servers=$(ivpn servers | awk 'BEGIN { FS="|"; OFS="," } /Open/ {sub(/\([A-Z]{2}\)/,"",$3); sub(/, [A-Z]{2}/,"",$3);print $2,$3,$4}' | sed -E 's/[ ]{2,}//g;s/, /,/g;s/^[ \t]{1,}//g;s/[ ]?\([A-Z]{2}\)[ ]?//g;s/,[A-Z]{2},/,/g;s/[ ],/,/g')
+line_count=$(wc -l <<< $servers)
+
+status=$(ivpn status | awk '/^VPN/ {print $3}')
+
+if [[ $status == "DISCONNECTED" ]]
+then
+	prompt_to_connect=$(echo -e "Yes\nNo" | dmenu -i -p "VPN disconnected, connect?")
+
+	[[ -z $prompt_to_connect ]] && exit;
+	if [[ $prompt_to_connect == "Yes" ]]
+	then
+		typpe=$(echo -e "Fastest\nServer List" | dmenu -i -p "Which VPN? ")
+		[[ -z $typpe ]] && exit;
+		if [[ $typpe == "Fastest" ]]
+		then
+			ivpn connect -fastest && ivpn firewall -on -lan_allow -ivpn_access_allow &>/dev/null &&
+				notify-send "Connect to fastest VPN ⚡";
+		elif [[ $typpe == "Server List" ]]
+		then
+			city=$(awk -F"," '{print $2 ", " $3}' <<< $servers | dmenu -i -p "Choose location: " -l $line_count -i | cut -d',' -f1)
+			[[ -z $city ]] && exit;
+			server_loc=$(grep -i $city <<< $servers | awk -F"," '{print $1}')
+			ivpn connect -l $server_loc &>/dev/null && ivpn firewall -on -lan_allow -ivpn_access_allow &>/dev/null &&
+				notify-send "Connected to $city 😋"
+		fi
+	else
+		notify-send "VPN still disconnected 😞" && exit;
+	fi
+else
+	prompt_to_disconnect=$(echo -e "Yes\nNo\nChange type" | dmenu -i -p "VPN connected, disconnect?")
+	[[ -z $prompt_to_disconnect ]] && exit;
+	if [[ $prompt_to_disconnect == "Yes" ]]
+	then
+		ivpn disconnect &>/dev/null && notify-send "VPN diconnected 😞"
+	elif [[ $prompt_to_disconnect == "Change type" ]]
+	then
+		typpe=$(echo -e "Fastest\nServer List" | dmenu -i -p "Which VPN? ")
+		[[ -z $typpe ]] && exit;
+		if [[ $typpe == "Fastest" ]]
+		then
+			ivpn disconnect &>/dev/null && ivpn connect -fastest && ivpn firewall -on -lan_allow -ivpn_access_allow &>/dev/null &&
+				notify-send "Connect to fastest VPN ⚡";
+		elif [[ $typpe == "Server List" ]]
+		then
+			city=$(awk -F"," '{print $2 ", " $3}' <<< $servers | dmenu -i -p "Choose location: " -l $line_count -i | cut -d',' -f1)
+			[[ -z $city ]] && exit;
+			server_loc=$(grep -i $city <<< $servers | awk -F"," '{print $1}')
+			ivpn connect -l $server_loc &>/dev/null && ivpn firewall -on -lan_allow -ivpn_access_allow &>/dev/null &&
+				notify-send "Changed servers to $city 🤗"
+		fi
+	else
+		notify-send "Still connected 😗" && exit;
+	fi
+fi

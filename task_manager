@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 tasks_db="$HOME/Work/tasks.md"
-tasks_log="$HOME/Work/tasks.log.md"
+tasks_log="$HOME/Work/tasks.log"
 
 [[ -f "$tasks_db" ]] || touch $tasks_db
 [[ -f "$tasks_log" ]] || touch $tasks_log
@@ -17,10 +17,10 @@ mark_done ()
 	# Marking it as done
 	echo -e "- [X] $chosen_task ~~$(date)~~" | sed "s/ STARTED//g" >> $tasks_db
 	if [ "$chosen_task" !~ "STARTED" ]; then
-		echo -e "*$(date)*\t**DONE**\t\t[ $chosen_task ]" >> $tasks_log
+		echo -e "$(date),done,$chosen_task." >> $tasks_log
 	else
 		chosen_task=$(echo "$chosen_task" | sed 's/ STARTED//g') &&
-		echo -e "*$(date)*\t**DONE**\t\t[ $chosen_task ]" >> $tasks_log
+		echo -e "$(date),done,$chosen_task." >> $tasks_log
 	fi
 
 }
@@ -32,14 +32,14 @@ mark_started ()
 	sed -i "$linenum d" $tasks_db
 	# Marking it as started
 	echo -e "- [o] $chosen_task STARTED" >> $tasks_db
-	echo -e "*$(date)*\t**STARTED**\t\t[ $chosen_task ]" >> $tasks_log
+	echo -e "$(date),started,$chosen_task." >> $tasks_log
 }
 
 create_task ()
 {
 	new_task=$(echo "" | dmenu -p "New task: ")
 	[[ ! -z "$new_task" ]] && echo -e "- [ ] $new_task" >> $tasks_db || exit
-	echo -e "*$(date)*\t**CREATED**\t\t[ $new_task ]" >> $tasks_log
+	echo -e "$(date),created,$new_task." >> $tasks_log
 }
 
 edit_task ()

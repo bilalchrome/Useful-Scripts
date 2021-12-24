@@ -1,0 +1,51 @@
+#!/bin/sh
+
+menu(){
+    printf "1. Download song\n"
+    printf "2. Download video\n"
+    printf "3. Play videos in mpv\n"
+    printf "4. Play audio in mpv\n"
+    printf "5. Save clipbaord image in ~/Photos/Screenshots/\n"
+    printf "6. Start downloading torrent from magnet\n"
+    printf "7. QR Code\n"
+}
+
+spell_failed(){
+    notify-send "Failed to cast spell"
+}
+
+choice=$(menu | dmenu -p "What to do" -i -l 20 | cut -d. -f1)
+cbtext=$(xclip -o -selection clipboard)
+
+case $choice in
+    1)
+	cd ~/Music && notify-send "Downloading Song" && youtube-dl -x "$cbtext" && notify-send "Download complete" || spell_failed
+	break
+	;;
+    2)
+	cd ~/Videos/yt && notify-send "Downloading Video" && youtube-dl "$cbtext" && notify-send "Download complete" || spell_failed
+	break
+	;;
+    3)
+	mpv "$cbtext" || spell_failed
+	break
+	;;
+    4)
+	mpv "$cbtext" || spell_failed
+	break
+	;;
+    5)
+	file=$(date +"%Y_%m_%d_%I_%M_%p")
+	xclip -selection clipboard -t image/png -o > $HOME/Photos/Screenshots/$file.png ||
+	    spell_failed
+	break
+	;;
+    6)
+	    transmission-remote -a "$(xclip -selection clipboard -o)"
+	break
+	;;
+    7)
+	    qrencode -s 6 -l H -o "/tmp/test.png" "$(xclip -selection clipboard -o)" && sxiv /tmp/test.png && shred -fuz /tmp/test.png
+	break
+	;;
+esac

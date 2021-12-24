@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
-journal_paper=$(xclip -o | sed '/\n/d')
+journal_paper=$(xclip -o | sed -e "/\n/d" -e "/^$/d" -e "s/^[ \t]*//g" -e "s/[ \t]*$//g")
+
 
 cd /tmp && rm -rf *.pdf
 
