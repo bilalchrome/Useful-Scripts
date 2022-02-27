@@ -6,10 +6,9 @@
 # it in your default PDF viewer.
 #
 # DEPENDENCIES:
-# 1. dmenu
-# 2. curl
-# 3. libnotify (for displaying notifications)
-# 4. xclip (clipboard manager)
+# 1. curl
+# 2. libnotify (for displaying notifications)
+# 3. xclip (clipboard manager)
 #--------------------------------------------------------------------#
 
 dmenuprompt() {
