@@ -9,6 +9,7 @@
 # 1. dmenu
 # 2. curl
 # 3. libnotify (for displaying notifications)
+# 4. xclip (clipboard manager)
 #--------------------------------------------------------------------#
 
 papersdir="$HOME/Work/Papers/PIV"
