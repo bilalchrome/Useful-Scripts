@@ -1,0 +1,56 @@
+#!/bin/bash
+
+#--------------------------------------------------------------------#
+# This script reads the clipboard when a link or DOI for a scientific paper is copied.
+# It then scrapes the HTML page from Sci-Hub.se and tries to download the pdf, and opens
+# it in your default PDF viewer.
+#
+# DEPENDENCIES:
+# 1. dmenu
+# 2. curl
+# 3. libnotify (for displaying notifications)
+#--------------------------------------------------------------------#
+
+papersdir="$HOME/Work/Papers/PIV"
+
+[[ -d $papersdir ]] || papersdir="~/Downloads"
+
+useragent="user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.182 Safari/537.36"
+doi=$(xclip -selection clipboard -o)
+linkk=$(echo "https://sci-hub.se/"$doi | sed "s/ //g")
+tmppaper=$(curl -H "$useragent" -s $linkk | grep "<button onclick" | awk 'BEGIN {FS="\""} {print $2}' | sed "s/location.href='//g;s/'//g;s/?download=true//g")
+
+[[ -z $tmppaper ]] && notify-send "Paper not found" && exit;
+
+two_dashes=$(echo $tmppaper | grep -o "^\/\/");
+
+[[ -z $two_dashes ]] && paper=$tmppaper || paper=$(echo $tmppaper | sed "s/^\/\///")
+
+paper_with_scihub=$(echo "https://$paper")
+
+[[ $paper_with_scihub == "https://sci-hub.se" ]] && notify-send "Paper not found" && exit;
+
+cd /tmp
+curl -H "$useragent" -LsO "$paper_with_scihub" \
+	&& downloaded_paper=$(ls -tr *.pdf | tail -n 1)
+
+typee=$(file -b $downloaded_paper | cut -d' ' -f1)
+
+if [[ typee == "HTML" || -z $downloaded_paper ]];
+then
+	paper_with_scihub=$(echo "https://sci-hub.se$paper")
+	curl -H "$useragent" -LsO "$paper_with_scihub" \
+		&& downloaded_paper=$(ls -tr *.pdf | tail -n 1)
+fi
+
+xdg-open $downloaded_paper && \
+answer=$(echo -e "Yes\nNo" | dmenu -i -p "Keep paper?")
+
+[[ -z $answer ]] && notify-send "$downloaded_paper in /tmp" && exit;
+
+case $answer in
+
+	"Yes") mv $downloaded_paper "$papersdir" && notify-send "$downloaded_paper saved in $papersdir" ;;
+	"No") rm -rf $downloaded_paper && notify-send "$downloaded_paper removed" ;;
+	*) exit ;;
+esac
