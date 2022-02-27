@@ -43,4 +43,4 @@ then
 		&& downloaded_paper=$(ls -tr *.pdf | tail -n 1)
 fi
 
-xdg-open $downloaded_paper
+xdg-open $downloaded_paper 2>/dev/null
