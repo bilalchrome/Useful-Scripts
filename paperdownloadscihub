@@ -6,10 +6,9 @@
 # it in your default PDF viewer.
 #
 # DEPENDENCIES:
-# 1. dmenu
-# 2. curl
-# 3. libnotify (for displaying notifications)
-# 4. xclip (clipboard manager)
+# 1. curl
+# 2. libnotify (for displaying notifications)
+# 3. xclip (clipboard manager)
 #--------------------------------------------------------------------#
 
 papersdir="$HOME/Work/Papers/PIV"
@@ -31,7 +30,7 @@ paper_with_scihub=$(echo "https://$paper")
 
 [[ $paper_with_scihub == "https://sci-hub.se" ]] && notify-send "Paper not found" && exit;
 
-cd /tmp
+cd $papersdir
 curl -H "$useragent" -LsO "$paper_with_scihub" \
 	&& downloaded_paper=$(ls -tr *.pdf | tail -n 1)
 
@@ -44,14 +43,4 @@ then
 		&& downloaded_paper=$(ls -tr *.pdf | tail -n 1)
 fi
 
-xdg-open $downloaded_paper && \
-answer=$(echo -e "Yes\nNo" | dmenu -i -p "Keep paper?")
-
-[[ -z $answer ]] && notify-send "$downloaded_paper in /tmp" && exit;
-
-case $answer in
-
-	"Yes") mv $downloaded_paper "$papersdir" && notify-send "$downloaded_paper saved in $papersdir" ;;
-	"No") rm -rf $downloaded_paper && notify-send "$downloaded_paper removed" ;;
-	*) exit ;;
-esac
+xdg-open $downloaded_paper
