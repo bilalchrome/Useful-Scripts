@@ -1,15 +1,19 @@
 #!/bin/bash
 
-#--------------------------------------------------------------------#
+# INTRODUCTION
 # This script reads the clipboard when a link or DOI for a scientific paper is copied.
 # It then scrapes the HTML page from Sci-Hub.se and tries to download the pdf, and opens
 # it in your default PDF viewer.
-#
+#--------------------------------------------------------------------#
 # DEPENDENCIES:
 # 1. curl
 # 2. libnotify (for displaying notifications)
 # 3. xclip (clipboard manager)
 #--------------------------------------------------------------------#
+# HOW TO RUN
+# 1. Look up any scientific article on google scholar.
+# 2. Copy the doi (typically starts with an https://doi.org/... OR you can copy the link of the paper
+# 3. Open up the terminal and run the script (make sure script is executable)
 
 dmenuprompt() {
 
@@ -27,11 +31,11 @@ esac
 
 dependency_check ()
 {
-	[[ -z $(which notify-send) ]] &>/dev/null &&
+	[[ -z $(which notify-send) ]] && \
 	echo -e "Missing package: libnotify"
-	[[ -z $(which xclip) ]] &>/dev/null &&
+	[[ -z $(which xclip) ]] && \
 	echo -e "Missing package: xclip"
-	[[ -z $(which curl) ]] &>/dev/null &&
+	[[ -z $(which curl) ]] && \
 	echo -e "Missing package: curl"
 }
 
