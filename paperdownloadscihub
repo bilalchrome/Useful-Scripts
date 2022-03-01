@@ -15,7 +15,7 @@ dmenuprompt() {
 
 answer=$(echo -e "Yes\nNo" | dmenu -i -p "Keep paper?")
 
-[[ -z $answer ]] && notify-send "$downloaded_paper in /tmp" && exit;
+[[ -z $answer ]] && notify-send "$downloaded_paper in $papersdir" && exit;
 
 case $answer in
 
@@ -24,6 +24,18 @@ case $answer in
 	*) exit ;;
 esac
 }
+
+dependency_check ()
+{
+	[[ -z $(which notify-send) ]] &>/dev/null &&
+	echo -e "Missing package: libnotify"
+	[[ -z $(which xclip) ]] &>/dev/null &&
+	echo -e "Missing package: xclip"
+	[[ -z $(which curl) ]] &>/dev/null &&
+	echo -e "Missing package: curl"
+}
+
+dependency_check;
 
 papersdir="$HOME/Work/Papers/PIV"
 
